@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppContext, type SparkFn } from './AppContext'
 import Nav from './components/Nav'
-import SparkOverlay, { type Spark } from './components/SparkOverlay'
 import { playBlitz, playSpark } from './audio'
 import { areaPath, CURATED_SEEDS, fmtUsd, seeded, sparkPath, TOKEN_SEEDS } from './data'
 import { HUES, PALETTE } from './theme'
@@ -75,9 +74,6 @@ export default function App() {
   const [launchDeployed, setLaunchDeployed] = useState(false)
   const [launchDeployAddr, setLaunchDeployAddr] = useState('')
 
-  const [sparks, setSparks] = useState<Spark[]>([])
-  const sparkId = useRef(0)
-
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 760)
     onResize()
@@ -89,9 +85,6 @@ export default function App() {
     return (e: React.MouseEvent) => {
       e.stopPropagation()
       playSpark()
-      const id = ++sparkId.current
-      setSparks((s) => [...s, { id, left: e.clientX + 'px', top: e.clientY + 'px' }])
-      setTimeout(() => setSparks((s) => s.filter((sp) => sp.id !== id)), 500)
       handler?.()
     }
   }, [])
@@ -192,7 +185,6 @@ export default function App() {
           paddingBottom: isMobile ? 70 : 0,
         }}
       >
-        <SparkOverlay sparks={sparks} c={c} />
         <Nav page={page} onNavigate={navigate} isDark={isDark} onToggleTheme={toggleTheme} walletConnected={walletConnected} onToggleWallet={toggleWallet} />
 
         {page === 'explore' && (

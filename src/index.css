@@ -43,11 +43,6 @@ button {
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 @keyframes boltStrike { 0%, 100% { opacity: 0.9; } 45% { opacity: 1; } 50% { opacity: 0.3; } 55% { opacity: 1; } }
-@keyframes sparkPop {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-8deg); }
-  25% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(4deg); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9) rotate(0deg); }
-}
 
 .clickable {
   cursor: pointer;
