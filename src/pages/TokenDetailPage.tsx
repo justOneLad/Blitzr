@@ -137,26 +137,26 @@ export default function TokenDetailPage({ token, extra }: { token: Token; extra:
 
   return (
     <div data-screen-label="Token detail" style={{ maxWidth: 1240, margin: '0 auto', padding: pagePad }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 16, marginBottom: 28 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? 12 : 16, marginBottom: 28 }}>
         <div
           style={{
-            width: 64,
-            height: 64,
+            width: isMobile ? 48 : 64,
+            height: isMobile ? 48 : 64,
             flex: 'none',
             background: token.hue,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontWeight: 800,
-            fontSize: 22,
+            fontSize: isMobile ? 16 : 22,
             color: '#08080b',
           }}
         >
           {token.initial}
         </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
-            <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0 }}>{token.name}</h1>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: isMobile ? 8 : 10 }}>
+            <h1 style={{ fontSize: isMobile ? 20 : 26, fontWeight: 800, margin: 0 }}>{token.name}</h1>
             <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, color: c.textMuted, fontWeight: 600 }}>{token.ticker}</span>
             {token.isNew && (
               <span style={{ fontSize: 11, fontWeight: 700, color: '#08080b', background: c.accent, padding: '3px 8px', letterSpacing: '.04em', animation: 'boltPulse 1.6s infinite' }}>NEW</span>
@@ -181,8 +181,8 @@ export default function TokenDetailPage({ token, extra }: { token: Token; extra:
             {telegram && <a href="#" style={{ fontSize: 13, fontWeight: 600, color: c.accent }}>✈ {telegram}</a>}
           </div>
         </div>
-        <div style={{ textAlign: 'right', flex: 'none' }}>
-          <div style={{ fontSize: 28, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace" }}>{token.priceStr}</div>
+        <div style={{ textAlign: isMobile ? 'left' : 'right', flex: 'none', width: isMobile ? '100%' : 'auto' }}>
+          <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, fontFamily: "'JetBrains Mono',monospace" }}>{token.priceStr}</div>
           <div style={{ fontSize: 14, fontWeight: 700, color: token.changeColor }}>{token.changeStr} · 24h</div>
         </div>
       </div>
