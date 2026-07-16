@@ -1,0 +1,58 @@
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  font-family: 'Sora', system-ui, sans-serif;
+}
+
+::selection {
+  background: #e9ff2e;
+  color: #08080b;
+}
+
+input, textarea, button {
+  font-family: inherit;
+}
+
+input::placeholder, textarea::placeholder {
+  font-family: 'Sora', system-ui, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+
+@keyframes boltPulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+@keyframes boltFlow { 0% { background-position: 0 0; } 100% { background-position: 48px 0; } }
+@keyframes floatGlow { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-14px) scale(1.03); } }
+@keyframes dashMove { to { stroke-dashoffset: -200; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes boltStrike { 0%, 100% { opacity: 0.9; } 45% { opacity: 1; } 50% { opacity: 0.3; } 55% { opacity: 1; } }
+@keyframes sparkPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(-8deg); }
+  25% { opacity: 1; transform: translate(-50%, -50%) scale(1.15) rotate(4deg); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9) rotate(0deg); }
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
