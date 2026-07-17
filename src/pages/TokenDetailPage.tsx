@@ -9,9 +9,9 @@ const DEFAULT_CHAT: ChatMessage[] = [
   { who: '0xArkAngel', msg: "devs based for going 100% one-sided from block 1", mine: false },
 ]
 
+const CTO_FEE_ETH = 0.02
+
 export interface TokenDetailExtra {
-  burnEnabled: boolean
-  onToggleBurn: () => void
   pendingFeesEth: number
   onClaimFees: () => void
   ctoInfo: CtoInfo | null
@@ -77,7 +77,6 @@ export default function TokenDetailPage({ token, extra }: { token: Token; extra:
 
   const chatMessages = extra.chatMessages.length ? extra.chatMessages : DEFAULT_CHAT
 
-  const feeSplitLabel = extra.burnEnabled ? '🔥 Burned on claim' : '70% creator / 30% platform'
   const pendingFeesStr = extra.pendingFeesEth.toFixed(3) + ' ETH'
   const isCTO = !!extra.ctoInfo
   const showCreatorTools = !token.isCurated
@@ -172,6 +171,9 @@ export default function TokenDetailPage({ token, extra }: { token: Token; extra:
             {token.isCurated && (
               <span style={{ fontSize: 11, fontWeight: 600, color: c.textFaint, border: `1px solid ${c.border}`, padding: '3px 8px' }}>Not launched on Blitzr — curated for trading</span>
             )}
+            {token.isBonding && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: c.accent2, border: `1px solid ${c.accent2}66`, padding: '3px 8px' }}>Bonding Curve</span>
+            )}
           </div>
           <div style={{ color: c.textMuted, fontSize: 13.5, marginTop: 4, fontFamily: "'JetBrains Mono',monospace" }}>{contract}</div>
           <div style={{ fontSize: 14, color: c.textMuted, marginTop: 10, maxWidth: 520, lineHeight: 1.5 }}>{description}</div>
@@ -216,17 +218,25 @@ export default function TokenDetailPage({ token, extra }: { token: Token; extra:
             </div>
           </div>
 
+          {token.isBonding && (
+            <div style={{ marginTop: 16, background: c.panel, border: `1px solid ${c.accent2}55`, padding: 20, clipPath: 'polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: c.accent2, letterSpacing: '.08em' }}>BONDING CURVE — MIGRATION PROGRESS</div>
+                <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 13, fontWeight: 700 }}>{token.bondingPct}%</div>
+              </div>
+              <div style={{ height: 10, background: c.panelAlt, marginBottom: 10 }}>
+                <div style={{ height: '100%', width: `${token.bondingPct}%`, background: c.accent2 }} />
+              </div>
+              <div style={{ fontSize: 13, color: c.textMuted }}>{token.bondingRaisedEth} / {token.bondingTargetEth} ETH raised — auto-migrates to a permanently locked DEX pool at target.</div>
+            </div>
+          )}
+
           {showCreatorTools && (
             <div style={{ marginTop: 16, background: c.panel, border: `1px solid ${c.border}`, padding: 20, clipPath: 'polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: c.accent, letterSpacing: '.08em', marginBottom: 14 }}>CREATOR TOOLS</div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-                <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>Fee split — launched-token leg</div>
-                  <div style={{ fontSize: 12.5, color: c.textMuted, marginTop: 2 }}>{feeSplitLabel}</div>
-                </div>
-                <div onClick={spark(extra.onToggleBurn)} className="clickable" style={{ width: 44, height: 24, borderRadius: 999, background: c.panelAlt, border: `1px solid ${c.border}`, position: 'relative', flex: 'none' }}>
-                  <div style={{ position: 'absolute', top: 2, left: 2, width: 18, height: 18, borderRadius: '50%', background: c.accent, transition: 'transform .15s', transform: extra.burnEnabled ? 'translateX(20px)' : 'translateX(0)' }} />
-                </div>
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 600 }}>Fee split</div>
+                <div style={{ fontSize: 12.5, color: c.textMuted, marginTop: 2 }}>Creator receives both token-side and quote-side fees</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>
@@ -245,14 +255,14 @@ export default function TokenDetailPage({ token, extra }: { token: Token; extra:
             <div style={{ marginTop: 16, background: c.panel, border: `1px solid ${c.accent2}55`, padding: 20, clipPath: 'polygon(14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%,0 14px)' }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: c.accent2, letterSpacing: '.08em', marginBottom: 8 }}>COMMUNITY TAKEOVER</div>
               <div style={{ fontSize: 13.5, color: c.textMuted, lineHeight: 1.5, marginBottom: 14 }}>
-                Liquidity is permanent regardless of who runs the page — a CTO only updates the public description and socials shown here, community-run. Anyone can propose one.
+                Liquidity stays permanent regardless of who runs the page — a CTO only updates the public description and socials. Anyone can propose one.
               </div>
               {ctoFormOpen && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '12px 14px', background: c.panelAlt, border: `1px solid ${c.danger}55` }}>
                     <span style={{ flex: 'none', fontWeight: 800, color: c.danger }}>⚡</span>
                     <div style={{ fontSize: 13, color: c.text, lineHeight: 1.5 }}>
-                      Submitting costs a <b>0.02 ETH</b> fee, charged whether or not the community accepts it. This is <b>non-refundable</b> — it exists to keep bots from spamming fake takeovers.
+                      Submitting costs a <b>{CTO_FEE_ETH} ETH</b> non-refundable fee — deters bot spam.
                     </div>
                   </div>
                   <textarea
@@ -285,14 +295,14 @@ export default function TokenDetailPage({ token, extra }: { token: Token; extra:
                       Cancel
                     </div>
                     <div onClick={spark(submitCto)} className="clickable" style={{ padding: '11px 20px', fontWeight: 700, fontSize: 13, background: c.accent2, color: '#fff' }}>
-                      Pay 0.02 ETH &amp; submit
+                      Pay {CTO_FEE_ETH} ETH &amp; submit
                     </div>
                   </div>
                 </div>
               )}
               {!ctoFormOpen && (
                 <div onClick={spark(openCtoForm)} className="clickable" style={{ padding: '11px 20px', fontWeight: 700, fontSize: 13, background: 'transparent', color: c.accent2, border: `1px solid ${c.accent2}66`, width: 'fit-content' }}>
-                  Propose a takeover (0.02 ETH, non-refundable)
+                  Propose a takeover ({CTO_FEE_ETH} ETH)
                 </div>
               )}
               {!!ctoToast && <div style={{ marginTop: 12, fontSize: 12.5, color: c.accent2, fontWeight: 600 }}>{ctoToast}</div>}

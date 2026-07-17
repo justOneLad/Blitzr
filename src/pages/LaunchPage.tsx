@@ -36,9 +36,11 @@ export default function LaunchPage({
 }: LaunchPageProps) {
   const { c, spark, isMobile } = useAppContext()
 
+  const isDirect = form.launchType === 'direct'
+  const isBonding = form.launchType === 'bonding'
   const canNextDetails = form.name.trim() && form.ticker.trim()
   const instantBuyVal = parseFloat(form.instantBuyEth) || 0
-  const instantBuyWarn = instantBuyVal > 0 && instantBuyVal >= 2.5
+  const instantBuyWarn = isDirect && instantBuyVal > 0 && instantBuyVal >= 2.5
   const nextEnabled = step === 0 ? !!canNextDetails : step === 1 ? !instantBuyWarn : step === 2 ? agree : true
 
   const steps = STEP_LABELS.map((label, i) => ({
@@ -56,13 +58,14 @@ export default function LaunchPage({
   const reviewRows = [
     { label: 'Name', value: form.name || '—' },
     { label: 'Ticker', value: form.ticker || '—' },
-    { label: 'Stack', value: form.stack === 'v4' ? 'xBlitzr (Uniswap V4)' : 'Blitzr (Uniswap V3)' },
+    { label: 'Launch type', value: isBonding ? 'Bonding Curve' : 'Direct Liquidity' },
+    { label: 'Stack', value: isBonding ? `Migrates at ${form.migrationTarget || '24'} ETH` : form.stack === 'v4' ? 'xBlitzr (Uniswap V4)' : 'Blitzr (Uniswap V3)' },
     { label: 'Quote token', value: form.quoteToken },
     { label: 'Total supply', value: '1,000,000,000 (100% to liquidity)' },
     { label: 'Launch fee', value: '0.05 ETH' },
     { label: 'Instant buy', value: instantBuyVal > 0 ? instantBuyVal + ' ETH' : 'None' },
     { label: 'Fee wallet', value: form.feeWallet.trim() || 'Your connected wallet' },
-    { label: 'Fee burn (launched leg)', value: form.burnEnabled ? 'Enabled' : 'Disabled' },
+    { label: 'Fee split', value: 'Creator receives both sides' },
   ]
 
   const launchRowDir = isMobile ? 'column' : 'row'
@@ -145,26 +148,59 @@ export default function LaunchPage({
             />
           </div>
           <div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>DEX STACK</div>
+            <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>LAUNCH TYPE</div>
             <div style={{ display: 'flex', flexDirection: launchRowDir, gap: 10 }}>
               <div
-                onClick={spark(() => onFormChange({ stack: 'v3' }))}
+                onClick={spark(() => onFormChange({ launchType: 'direct' }))}
                 className="clickable"
-                style={{ flex: 1, padding: 14, background: form.stack === 'v3' ? c.accent : 'transparent', color: form.stack === 'v3' ? '#08080b' : c.textMuted, border: `1px solid ${c.border}` }}
+                style={{ flex: 1, padding: 14, background: isDirect ? c.accent : 'transparent', color: isDirect ? '#08080b' : c.textMuted, border: `1px solid ${c.border}` }}
               >
-                <div style={{ fontWeight: 700, fontSize: 14 }}>Blitzr</div>
-                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>Uniswap V3 · any registered DEX</div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>Direct Liquidity</div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>100% supply seeded straight to a DEX pool, locked forever</div>
               </div>
               <div
-                onClick={spark(() => onFormChange({ stack: 'v4' }))}
+                onClick={spark(() => onFormChange({ launchType: 'bonding' }))}
                 className="clickable"
-                style={{ flex: 1, padding: 14, background: form.stack === 'v4' ? c.accent2 : 'transparent', color: form.stack === 'v4' ? '#fff' : c.textMuted, border: `1px solid ${c.border}` }}
+                style={{ flex: 1, padding: 14, background: isBonding ? c.accent2 : 'transparent', color: isBonding ? '#fff' : c.textMuted, border: `1px solid ${c.border}` }}
               >
-                <div style={{ fontWeight: 700, fontSize: 14 }}>xBlitzr</div>
-                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>Uniswap V4 · hook-enforced lock</div>
+                <div style={{ fontWeight: 700, fontSize: 14 }}>Bonding Curve</div>
+                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>Price discovery on a curve, auto-migrates to locked liquidity at target</div>
               </div>
             </div>
           </div>
+          {isDirect && (
+            <div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>DEX STACK</div>
+              <div style={{ display: 'flex', flexDirection: launchRowDir, gap: 10 }}>
+                <div
+                  onClick={spark(() => onFormChange({ stack: 'v3' }))}
+                  className="clickable"
+                  style={{ flex: 1, padding: 14, background: form.stack === 'v3' ? c.accent : 'transparent', color: form.stack === 'v3' ? '#08080b' : c.textMuted, border: `1px solid ${c.border}` }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Blitzr</div>
+                  <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>Uniswap V3 · any registered DEX</div>
+                </div>
+                <div
+                  onClick={spark(() => onFormChange({ stack: 'v4' }))}
+                  className="clickable"
+                  style={{ flex: 1, padding: 14, background: form.stack === 'v4' ? c.accent2 : 'transparent', color: form.stack === 'v4' ? '#fff' : c.textMuted, border: `1px solid ${c.border}` }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>xBlitzr</div>
+                  <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>Uniswap V4 · hook-enforced lock</div>
+                </div>
+              </div>
+            </div>
+          )}
+          {isBonding && (
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '14px 16px', background: c.accentSoft, border: `1px solid ${c.accent}55` }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" style={{ flex: 'none', marginTop: 2 }}>
+                <path d="M13 2 L3 14 H10 L8 22 L21 8 H13 L15 2 Z" fill={c.accent} />
+              </svg>
+              <div style={{ fontSize: 13, color: c.text, lineHeight: 1.5 }}>
+                Trades happen against a bonding curve until the migration target is hit — then the curve's raised liquidity auto-deploys to a locked DEX pool, same permanent-lock guarantee as Direct.
+              </div>
+            </div>
+          )}
           <div
             onClick={nextEnabled ? spark(onNext) : undefined}
             className={nextEnabled ? 'clickable' : ''}
@@ -196,39 +232,61 @@ export default function LaunchPage({
               Fixed supply of <b>1,000,000,000</b> tokens — 100% seeded one-sided into the pool and <b>permanently locked</b>. There is no creator reserve.
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>QUOTE TOKEN</div>
-            <div style={{ display: 'flex', flexDirection: launchRowDir, gap: 10 }}>
-              <div
-                onClick={spark(() => onFormChange({ quoteToken: 'WETH' }))}
-                className="clickable"
-                style={{ flex: 1, textAlign: 'center', padding: 12, fontWeight: 700, fontSize: 14, background: form.quoteToken === 'WETH' ? c.accent : 'transparent', color: form.quoteToken === 'WETH' ? '#08080b' : c.textMuted, border: `1px solid ${c.border}` }}
-              >
-                WETH
+          {isDirect && (
+            <>
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>QUOTE TOKEN</div>
+                <div style={{ display: 'flex', flexDirection: launchRowDir, gap: 10 }}>
+                  <div
+                    onClick={spark(() => onFormChange({ quoteToken: 'WETH' }))}
+                    className="clickable"
+                    style={{ flex: 1, textAlign: 'center', padding: 12, fontWeight: 700, fontSize: 14, background: form.quoteToken === 'WETH' ? c.accent : 'transparent', color: form.quoteToken === 'WETH' ? '#08080b' : c.textMuted, border: `1px solid ${c.border}` }}
+                  >
+                    WETH
+                  </div>
+                  <div
+                    onClick={spark(() => onFormChange({ quoteToken: 'USDC' }))}
+                    className="clickable"
+                    style={{ flex: 1, textAlign: 'center', padding: 12, fontWeight: 700, fontSize: 14, background: form.quoteToken === 'USDC' ? c.accent : 'transparent', color: form.quoteToken === 'USDC' ? '#08080b' : c.textMuted, border: `1px solid ${c.border}` }}
+                  >
+                    USDC
+                  </div>
+                </div>
               </div>
-              <div
-                onClick={spark(() => onFormChange({ quoteToken: 'USDC' }))}
-                className="clickable"
-                style={{ flex: 1, textAlign: 'center', padding: 12, fontWeight: 700, fontSize: 14, background: form.quoteToken === 'USDC' ? c.accent : 'transparent', color: form.quoteToken === 'USDC' ? '#08080b' : c.textMuted, border: `1px solid ${c.border}` }}
-              >
-                USDC
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px', background: c.panel, border: `1px solid ${c.border}` }}>
+                <span style={{ fontSize: 13.5, color: c.textMuted }}>Launch fee (native ETH, fixed)</span>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 14 }}>0.05 ETH</span>
               </div>
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px', background: c.panel, border: `1px solid ${c.border}` }}>
-            <span style={{ fontSize: 13.5, color: c.textMuted }}>Launch fee (native ETH, fixed)</span>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 14 }}>0.05 ETH</span>
-          </div>
-          <div>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>INSTANT BUY — OPTIONAL EXTRA ETH</div>
-            <input
-              value={form.instantBuyEth}
-              onChange={(e) => onFormChange({ instantBuyEth: e.target.value })}
-              placeholder="0.0"
-              style={{ width: '100%', background: c.panel, border: `1px solid ${c.border}`, color: c.text, padding: 13, fontSize: 15, fontFamily: "'JetBrains Mono',monospace" }}
-            />
-            {instantBuyWarn && <div style={{ fontSize: 12.5, color: c.danger, marginTop: 6 }}>⚡ A buy this large will likely exceed the 2.5% anti-bot max-wallet cap and revert the launch.</div>}
-          </div>
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>INSTANT BUY — OPTIONAL EXTRA ETH</div>
+                <input
+                  value={form.instantBuyEth}
+                  onChange={(e) => onFormChange({ instantBuyEth: e.target.value })}
+                  placeholder="0.0"
+                  style={{ width: '100%', background: c.panel, border: `1px solid ${c.border}`, color: c.text, padding: 13, fontSize: 15, fontFamily: "'JetBrains Mono',monospace" }}
+                />
+                {instantBuyWarn && <div style={{ fontSize: 12.5, color: c.danger, marginTop: 6 }}>⚡ A buy this large will likely exceed the 2.5% anti-bot max-wallet cap and revert the launch.</div>}
+              </div>
+            </>
+          )}
+          {isBonding && (
+            <>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '14px 16px', background: c.panel, border: `1px solid ${c.border}` }}>
+                <span style={{ fontSize: 13.5, color: c.textMuted }}>Launch fee (native ETH, fixed)</span>
+                <span style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 14 }}>0.05 ETH</span>
+              </div>
+              <div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>MIGRATION TARGET (ETH RAISED)</div>
+                <input
+                  value={form.migrationTarget}
+                  onChange={(e) => onFormChange({ migrationTarget: e.target.value })}
+                  placeholder="e.g. 24"
+                  style={{ width: '100%', background: c.panel, border: `1px solid ${c.border}`, color: c.text, padding: 13, fontSize: 15, fontFamily: "'JetBrains Mono',monospace" }}
+                />
+                <div style={{ fontSize: 12, color: c.textFaint, marginTop: 6 }}>Once the curve raises this much, it auto-migrates to a permanently locked DEX pool.</div>
+              </div>
+            </>
+          )}
           <div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: c.textMuted, marginBottom: 6 }}>FEE WALLET — OPTIONAL</div>
             <input
@@ -237,12 +295,6 @@ export default function LaunchPage({
               placeholder="Defaults to your connected wallet"
               style={{ width: '100%', background: c.panel, border: `1px solid ${c.border}`, color: c.text, padding: 13, fontSize: 14.5, fontFamily: "'JetBrains Mono',monospace" }}
             />
-          </div>
-          <div onClick={spark(() => onFormChange({ burnEnabled: !form.burnEnabled }))} className="clickable" style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 4 }}>
-            <div style={{ width: 20, height: 20, border: `2px solid ${form.burnEnabled ? c.accent : c.borderStrong}`, background: form.burnEnabled ? c.accent : 'transparent', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: '#08080b', fontWeight: 800 }}>
-              {form.burnEnabled ? '✓' : ''}
-            </div>
-            <div style={{ fontSize: 13.5, color: c.textMuted }}>Burn the launched-token fee leg on every claim (default on — deflationary).</div>
           </div>
           <div style={{ display: 'flex', flexDirection: launchRowDir, justifyContent: 'space-between', gap: 10, marginTop: 8 }}>
             <div onClick={spark(onBack)} className="clickable" style={{ padding: '14px 24px', fontWeight: 700, fontSize: 14.5, color: c.textMuted, border: `1px solid ${c.border}`, textAlign: 'center', order: backOrder }}>

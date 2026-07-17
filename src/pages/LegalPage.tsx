@@ -6,7 +6,7 @@ const TERMS_SECTIONS = [
   { title: '2. Non-custodial protocol', body: 'Blitzr is a set of smart contracts. We never hold your funds, private keys, or tokens — all deploys, trades, and claims execute directly from your wallet.' },
   { title: '3. Permanent liquidity', body: 'Tokens launched via Blitzr seed 100% of supply as one-sided liquidity that is permanently locked on-chain. This action is irreversible and cannot be undone by us, the creator, or any third party.' },
   { title: '4. No financial advice', body: 'Nothing on this site is investment, legal, or tax advice. Tokens launched by third parties carry total loss risk. Do your own research.' },
-  { title: '5. Fees', body: 'A fixed native-token launch fee and an ongoing swap fee split (creator/platform, or burned if configured) apply as disclosed in the app at time of transaction.' },
+  { title: '5. Fees', body: 'A fixed native-token launch fee and an ongoing swap fee, claimable by the creator, apply as disclosed in the app at time of transaction.' },
   { title: '6. Prohibited use', body: 'You may not use Blitzr to launch tokens that are fraudulent, infringing, or in violation of applicable law in your jurisdiction.' },
   { title: '7. No warranty', body: 'The protocol is provided "as is." Smart contracts may contain bugs. We disclaim all warranties to the fullest extent permitted by law.' },
 ]

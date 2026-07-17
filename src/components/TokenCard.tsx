@@ -91,6 +91,17 @@ export default function TokenCard({ tok, onOpen }: { tok: Token; onOpen: () => v
         </div>
         <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 14, fontWeight: 700, color: tok.changeColor }}>{tok.changeStr}</div>
       </div>
+      {tok.isBonding && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: c.textFaint, fontWeight: 600, marginBottom: 4 }}>
+            <span>MIGRATION</span>
+            <span>{tok.bondingPct}%</span>
+          </div>
+          <div style={{ height: 6, background: c.panelAlt }}>
+            <div style={{ height: '100%', width: `${tok.bondingPct}%`, background: tok.stackColor }} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -7,9 +7,11 @@ export interface TokenSeed {
   holders: number
   isNew: boolean
   isCurated?: boolean
+  isBonding?: boolean
+  bondingTargetEth?: number
+  bondingRaisedEth?: number
   stack?: 'v3' | 'v4'
   quote?: 'WETH' | 'USDC'
-  burnEnabled?: boolean
   pendingFeesEth?: number
   antiBotBlocksLeft?: number
   website?: string
@@ -52,14 +54,18 @@ export function areaPath(linePath: string, w: number, h: number, pad: number): s
 }
 
 export const TOKEN_SEEDS: TokenSeed[] = [
-  { id: 'volt', name: 'Voltage', ticker: 'VOLT', basePrice: 0.0042, mcap: 4200000, holders: 3120, isNew: false, stack: 'v3', quote: 'WETH', burnEnabled: true, pendingFeesEth: 0.842, antiBotBlocksLeft: 0, website: 'voltage.fun', twitter: '@voltagefun', telegram: 't.me/voltagefun', description: 'A high-frequency payments rail token, seeded with permanent one-sided liquidity from day one.' },
-  { id: 'thundr', name: 'Thunderhead', ticker: 'THUNDR', basePrice: 0.00081, mcap: 810000, holders: 980, isNew: true, stack: 'v4', quote: 'WETH', burnEnabled: true, pendingFeesEth: 0.031, antiBotBlocksLeft: 6, website: 'thunderhead.xyz', twitter: '@thundrhead', telegram: 't.me/thundrhead', description: 'Community-run weather-derivatives experiment. Launched on xBlitzr V4 hooks.' },
-  { id: 'stc', name: 'Static', ticker: 'STC', basePrice: 0.156, mcap: 15600000, holders: 8420, isNew: false, stack: 'v3', quote: 'USDC', burnEnabled: false, pendingFeesEth: 2.114, antiBotBlocksLeft: 0, website: 'static.markets', twitter: '@staticmarkets', telegram: 't.me/staticmarkets', description: 'Volatility index token tracking on-chain gas markets.' },
-  { id: 'surge', name: 'Surge', ticker: 'SURGE', basePrice: 0.0231, mcap: 2310000, holders: 2210, isNew: false, stack: 'v4', quote: 'WETH', burnEnabled: true, pendingFeesEth: 0.512, antiBotBlocksLeft: 0, website: 'surgeprotocol.io', twitter: '@surgeprotocol', telegram: 't.me/surgeprotocol', description: 'Momentum-trading rewards token for the Surge trading league.' },
-  { id: 'amp', name: 'Ampere', ticker: 'AMP', basePrice: 1.42, mcap: 42000000, holders: 15400, isNew: false, stack: 'v3', quote: 'WETH', burnEnabled: false, pendingFeesEth: 5.203, antiBotBlocksLeft: 0, website: 'ampere.energy', twitter: '@ampereenergy', telegram: 't.me/ampereenergy', description: 'Backed by a DePIN network of EV-charging nodes.' },
-  { id: 'flsh', name: 'Flashpoint', ticker: 'FLSH', basePrice: 0.00013, mcap: 130000, holders: 410, isNew: true, stack: 'v3', quote: 'WETH', burnEnabled: true, pendingFeesEth: 0.008, antiBotBlocksLeft: 9, website: 'flashpoint.fun', twitter: '@flashpointfun', telegram: 't.me/flashpointfun', description: 'Fresh degen launch — anti-bot window still active.' },
-  { id: 'grid', name: 'Gridlock', ticker: 'GRID', basePrice: 0.0067, mcap: 6700000, holders: 4030, isNew: false, stack: 'v4', quote: 'USDC', burnEnabled: true, pendingFeesEth: 0.734, antiBotBlocksLeft: 0, website: 'gridlock.network', twitter: '@gridlocknet', telegram: 't.me/gridlocknet', description: 'Grid-balancing incentive token for renewable energy DAOs.' },
-  { id: 'ovrc', name: 'Overclock', ticker: 'OVRC', basePrice: 0.334, mcap: 33400000, holders: 11200, isNew: false, stack: 'v3', quote: 'WETH', burnEnabled: false, pendingFeesEth: 3.87, antiBotBlocksLeft: 0, website: 'overclock.gg', twitter: '@overclockgg', telegram: 't.me/overclockgg', description: 'Esports staking and prediction markets token.' },
+  { id: 'volt', name: 'Voltage', ticker: 'VOLT', basePrice: 0.0042, mcap: 4200000, holders: 3120, isNew: false, stack: 'v3', quote: 'WETH', pendingFeesEth: 0.842, antiBotBlocksLeft: 0, website: 'voltage.fun', twitter: '@voltagefun', telegram: 't.me/voltagefun', description: 'A high-frequency payments rail token, seeded with permanent one-sided liquidity from day one.' },
+  { id: 'thundr', name: 'Thunderhead', ticker: 'THUNDR', basePrice: 0.00081, mcap: 810000, holders: 980, isNew: true, stack: 'v4', quote: 'WETH', pendingFeesEth: 0.031, antiBotBlocksLeft: 6, website: 'thunderhead.xyz', twitter: '@thundrhead', telegram: 't.me/thundrhead', description: 'Community-run weather-derivatives experiment. Launched on xBlitzr V4 hooks.' },
+  { id: 'stc', name: 'Static', ticker: 'STC', basePrice: 0.156, mcap: 15600000, holders: 8420, isNew: false, stack: 'v3', quote: 'USDC', pendingFeesEth: 2.114, antiBotBlocksLeft: 0, website: 'static.markets', twitter: '@staticmarkets', telegram: 't.me/staticmarkets', description: 'Volatility index token tracking on-chain gas markets.' },
+  { id: 'surge', name: 'Surge', ticker: 'SURGE', basePrice: 0.0231, mcap: 2310000, holders: 2210, isNew: false, stack: 'v4', quote: 'WETH', pendingFeesEth: 0.512, antiBotBlocksLeft: 0, website: 'surgeprotocol.io', twitter: '@surgeprotocol', telegram: 't.me/surgeprotocol', description: 'Momentum-trading rewards token for the Surge trading league.' },
+  { id: 'amp', name: 'Ampere', ticker: 'AMP', basePrice: 1.42, mcap: 42000000, holders: 15400, isNew: false, stack: 'v3', quote: 'WETH', pendingFeesEth: 5.203, antiBotBlocksLeft: 0, website: 'ampere.energy', twitter: '@ampereenergy', telegram: 't.me/ampereenergy', description: 'Backed by a DePIN network of EV-charging nodes.' },
+  { id: 'flsh', name: 'Flashpoint', ticker: 'FLSH', basePrice: 0.00013, mcap: 130000, holders: 410, isNew: true, stack: 'v3', quote: 'WETH', pendingFeesEth: 0.008, antiBotBlocksLeft: 9, website: 'flashpoint.fun', twitter: '@flashpointfun', telegram: 't.me/flashpointfun', description: 'Fresh degen launch — anti-bot window still active.' },
+  { id: 'grid', name: 'Gridlock', ticker: 'GRID', basePrice: 0.0067, mcap: 6700000, holders: 4030, isNew: false, stack: 'v4', quote: 'USDC', pendingFeesEth: 0.734, antiBotBlocksLeft: 0, website: 'gridlock.network', twitter: '@gridlocknet', telegram: 't.me/gridlocknet', description: 'Grid-balancing incentive token for renewable energy DAOs.' },
+  { id: 'ovrc', name: 'Overclock', ticker: 'OVRC', basePrice: 0.334, mcap: 33400000, holders: 11200, isNew: false, stack: 'v3', quote: 'WETH', pendingFeesEth: 3.87, antiBotBlocksLeft: 0, website: 'overclock.gg', twitter: '@overclockgg', telegram: 't.me/overclockgg', description: 'Esports staking and prediction markets token.' },
+]
+
+export const BONDING_SEEDS: TokenSeed[] = [
+  { id: 'zapd', name: 'Zapped', ticker: 'ZAPD', basePrice: 0.0000042, mcap: 18400, holders: 64, isNew: true, isBonding: true, bondingTargetEth: 24, bondingRaisedEth: 6.8, description: 'Fresh bonding-curve launch — still raising toward its migration target.' },
 ]
 
 export const CURATED_SEEDS: TokenSeed[] = [

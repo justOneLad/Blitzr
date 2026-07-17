@@ -18,8 +18,10 @@ export interface Token extends TokenSeed {
   stackLabel: string
   stackColor: string
   isCurated: boolean
-  burnEnabled: boolean
-  feeSplitLabel: string
+  isBonding: boolean
+  bondingPct: number
+  bondingRaisedEth?: number
+  bondingTargetEth?: number
   pendingFeesEth: number
   pendingFeesStr: string
   antiBotActive: boolean
@@ -52,9 +54,12 @@ export interface LaunchForm {
   name: string
   ticker: string
   description: string
+  launchType: 'direct' | 'bonding'
   stack: 'v3' | 'v4'
   quoteToken: 'WETH' | 'USDC'
   instantBuyEth: string
   feeWallet: string
-  burnEnabled: boolean
+  migrationTarget: string
 }
+
+export type WalletModalStep = 'options' | 'email' | 'connecting'

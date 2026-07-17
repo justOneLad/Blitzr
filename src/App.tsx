@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppContext, type SparkFn } from './AppContext'
 import Nav from './components/Nav'
+import WalletModal from './components/WalletModal'
 import { playBlitz, playSpark } from './audio'
-import { areaPath, CURATED_SEEDS, fmtUsd, seeded, sparkPath, TOKEN_SEEDS } from './data'
+import { areaPath, BONDING_SEEDS, CURATED_SEEDS, fmtUsd, seeded, sparkPath, TOKEN_SEEDS } from './data'
 import { HUES, PALETTE } from './theme'
 import ExplorePage from './pages/ExplorePage'
 import TokenDetailPage from './pages/TokenDetailPage'
@@ -10,12 +11,12 @@ import LaunchPage from './pages/LaunchPage'
 import PortfolioPage from './pages/PortfolioPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import LegalPage from './pages/LegalPage'
-import type { ChatMessage, CtoInfo, LaunchForm, Page, Token } from './types'
+import type { ChatMessage, CtoInfo, LaunchForm, Page, Token, WalletModalStep } from './types'
 import type { TokenSeed } from './data'
 
 const DEFAULT_LAUNCH_FORM: LaunchForm = {
-  name: '', ticker: '', description: '', stack: 'v3', quoteToken: 'WETH',
-  instantBuyEth: '', feeWallet: '', burnEnabled: true,
+  name: '', ticker: '', description: '', launchType: 'direct', stack: 'v3', quoteToken: 'WETH',
+  instantBuyEth: '', feeWallet: '', migrationTarget: '',
 }
 
 function buildToken(seed: TokenSeed, idx: number, theme: 'dark' | 'light'): Token {
@@ -25,6 +26,8 @@ function buildToken(seed: TokenSeed, idx: number, theme: 'dark' | 'light'): Toke
   const change = (rnd() - 0.4) * 38
   const line = sparkPath(pts, 300, 90, 6)
   const lastTradedMins = Math.floor(rnd() * 180)
+  const isBonding = !!seed.isBonding
+  const bondingPct = isBonding && seed.bondingTargetEth ? Math.min(100, Math.round(((seed.bondingRaisedEth || 0) / seed.bondingTargetEth) * 100)) : 0
   return {
     ...seed,
     quote: seed.quote || 'WETH',
@@ -41,11 +44,13 @@ function buildToken(seed: TokenSeed, idx: number, theme: 'dark' | 'light'): Toke
     sparkPath: line,
     sparkArea: areaPath(line, 300, 90, 6),
     points: pts,
-    stackLabel: seed.isCurated ? 'Curated' : seed.stack === 'v4' ? 'xBlitzr' : 'Blitzr',
-    stackColor: seed.isCurated ? c.textMuted : seed.stack === 'v4' ? c.accent2 : c.accent,
+    stackLabel: seed.isCurated ? 'Curated' : isBonding ? 'Bond' : seed.stack === 'v4' ? 'xBlitzr' : 'Blitzr',
+    stackColor: seed.isCurated ? c.textMuted : isBonding ? c.accent2 : seed.stack === 'v4' ? c.accent2 : c.accent,
     isCurated: !!seed.isCurated,
-    burnEnabled: seed.burnEnabled || false,
-    feeSplitLabel: (seed.burnEnabled || false) ? '🔥 Burned on claim' : '70% creator / 30% platform',
+    isBonding,
+    bondingPct,
+    bondingRaisedEth: seed.bondingRaisedEth,
+    bondingTargetEth: seed.bondingTargetEth,
     pendingFeesEth: seed.pendingFeesEth || 0,
     pendingFeesStr: (seed.pendingFeesEth || 0).toFixed(3) + ' ETH',
     antiBotActive: (seed.antiBotBlocksLeft || 0) > 0,
@@ -58,10 +63,12 @@ export default function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const [page, setPage] = useState<Page>('explore')
   const [walletConnected, setWalletConnected] = useState(false)
+  const [walletModalOpen, setWalletModalOpen] = useState(false)
+  const [walletModalStep, setWalletModalStep] = useState<WalletModalStep>('options')
+  const [walletEmail, setWalletEmail] = useState('')
   const [isMobile, setIsMobile] = useState(false)
   const [selectedTokenId, setSelectedTokenId] = useState('volt')
   const [extraTokens, setExtraTokens] = useState<TokenSeed[]>([])
-  const [burnOverrides, setBurnOverrides] = useState<Record<string, boolean>>({})
   const [claimedFees, setClaimedFees] = useState<Record<string, boolean>>({})
   const [ctoTokens, setCtoTokens] = useState<Record<string, CtoInfo>>({})
   const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>({})
@@ -90,14 +97,13 @@ export default function App() {
   }, [])
 
   const tokens = useMemo(() => {
-    const all = [...extraTokens, ...TOKEN_SEEDS, ...CURATED_SEEDS]
+    const all = [...extraTokens, ...BONDING_SEEDS, ...TOKEN_SEEDS, ...CURATED_SEEDS]
     return all.map((seed, idx) => {
-      const burnEnabled = burnOverrides[seed.id] !== undefined ? burnOverrides[seed.id] : seed.burnEnabled || false
       const pendingFeesEth = claimedFees[seed.id] ? 0 : seed.pendingFeesEth || 0
       const base = buildToken(seed, idx, theme)
-      return { ...base, burnEnabled, feeSplitLabel: burnEnabled ? '🔥 Burned on claim' : '70% creator / 30% platform', pendingFeesEth, pendingFeesStr: pendingFeesEth.toFixed(3) + ' ETH' }
+      return { ...base, pendingFeesEth, pendingFeesStr: pendingFeesEth.toFixed(3) + ' ETH' }
     })
-  }, [extraTokens, theme, burnOverrides, claimedFees])
+  }, [extraTokens, theme, claimedFees])
 
   const selected = tokens.find((t) => t.id === selectedTokenId) || tokens[0]
 
@@ -116,10 +122,43 @@ export default function App() {
     setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
   }, [])
 
-  const toggleWallet = useCallback(() => {
-    playBlitz()
-    setWalletConnected((v) => !v)
+  const closeWalletModal = useCallback(() => {
+    setWalletModalOpen(false)
+    setWalletModalStep('options')
+    setWalletEmail('')
   }, [])
+
+  const finishConnect = useCallback(() => {
+    playBlitz()
+    setWalletConnected(true)
+    setWalletModalOpen(false)
+    setWalletModalStep('options')
+    setWalletEmail('')
+  }, [])
+
+  const connectWallet = useCallback(() => {
+    if (walletConnected) {
+      playBlitz()
+      setWalletConnected(false)
+      return
+    }
+    playBlitz()
+    setWalletModalOpen(true)
+    setWalletModalStep('options')
+  }, [walletConnected])
+
+  const chooseEmail = useCallback(() => setWalletModalStep('email'), [])
+
+  const submitEmail = useCallback(() => {
+    if (!walletEmail.trim()) return
+    setWalletModalStep('connecting')
+    setTimeout(finishConnect, 1400)
+  }, [walletEmail, finishConnect])
+
+  const connectExternal = useCallback(() => {
+    setWalletModalStep('connecting')
+    setTimeout(finishConnect, 1200)
+  }, [finishConnect])
 
   const deploy = useCallback(() => {
     playBlitz()
@@ -129,6 +168,7 @@ export default function App() {
       const addr =
         '0x' + Array.from({ length: 8 }, () => Math.floor(Math.random() * 16).toString(16)).join('') +
         '…' + Array.from({ length: 4 }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+      const isBonding = launchForm.launchType === 'bonding'
       const newTok: TokenSeed = {
         id: (launchForm.ticker || 'NEW').toLowerCase() + Date.now(),
         name: launchForm.name || 'New Token',
@@ -139,7 +179,9 @@ export default function App() {
         isNew: true,
         stack: launchForm.stack,
         quote: launchForm.quoteToken,
-        burnEnabled: launchForm.burnEnabled,
+        isBonding,
+        bondingTargetEth: isBonding ? parseFloat(launchForm.migrationTarget) || 24 : undefined,
+        bondingRaisedEth: isBonding ? 0.6 : undefined,
         pendingFeesEth: 0,
         antiBotBlocksLeft: 10,
         description: launchForm.description || 'Freshly launched on Blitzr.',
@@ -185,7 +227,18 @@ export default function App() {
           paddingBottom: isMobile ? 70 : 0,
         }}
       >
-        <Nav page={page} onNavigate={navigate} isDark={isDark} onToggleTheme={toggleTheme} walletConnected={walletConnected} onToggleWallet={toggleWallet} />
+        <Nav page={page} onNavigate={navigate} isDark={isDark} onToggleTheme={toggleTheme} walletConnected={walletConnected} onToggleWallet={connectWallet} />
+
+        <WalletModal
+          open={walletModalOpen}
+          step={walletModalStep}
+          email={walletEmail}
+          onEmailChange={setWalletEmail}
+          onChooseEmail={chooseEmail}
+          onSubmitEmail={submitEmail}
+          onConnectExternal={connectExternal}
+          onClose={closeWalletModal}
+        />
 
         {page === 'explore' && (
           <ExplorePage
@@ -202,8 +255,6 @@ export default function App() {
           <TokenDetailPage
             token={selected}
             extra={{
-              burnEnabled: selected.burnEnabled,
-              onToggleBurn: () => setBurnOverrides((s) => ({ ...s, [selected.id]: !selected.burnEnabled })),
               pendingFeesEth: selected.pendingFeesEth,
               onClaimFees: () => {
                 if (selected.pendingFeesEth <= 0) return
@@ -241,7 +292,7 @@ export default function App() {
         )}
 
         {page === 'portfolio' && (
-          <PortfolioPage connected={walletConnected} address="0x71C7...9e3F" holdings={holdings} launched={launchedTokens} onOpenToken={openToken} onConnect={toggleWallet} />
+          <PortfolioPage connected={walletConnected} address="0x71C7...9e3F" holdings={holdings} launched={launchedTokens} onOpenToken={openToken} onConnect={connectWallet} />
         )}
 
         {page === 'analytics' && <AnalyticsPage tokens={tokens} onOpenToken={openToken} />}
